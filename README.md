@@ -1,4 +1,4 @@
-# Advanced Variable Manager {AVM} [0.9.0]
+# Advanced Variable Manager {AVM} [0.9.1]
 
 ## By Grosse pastèque#6705
 
