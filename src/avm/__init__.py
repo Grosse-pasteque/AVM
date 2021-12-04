@@ -141,7 +141,7 @@ __all__ = (
 	'PatternError'
 )
 
-__version__ = '0.9.1'
+__version__ = '0.9.3'
 __author__ = (
 	'Grosse pastèque#6705',
 	'https://github.com/Grosse-pasteque',
