@@ -52,24 +52,31 @@ import avm
 
 | Functions | Decorator | Usage |
 | :------------: | :------------: | :------------: |
-| type_check | `YES` | Check function's args types. |
-| convertor | `YES` | Convert function's args values. |
+| type_check | `YES` | Check function's args types |
+| convertor | `YES` | Convert function's args values |
 | parameters | `NO` | Return all arguments of the passed function |
 | str_of | `YES` | Return a string vizualisation of the given class |
 | add_ctype | `YES` | Adds a custom type to `custom_types` |
 | length_check | `YES` | Check the length `(int: max-lenght, int: max-lenght) | int: max-lenght` of and object |
 | *custom_types* | `NO` | Variable that contains all the Custom Types |
+| tuple_check | `NO` | Checks a tuple, used for `avm.Union` |
+| cisinstance | `NO` | Python `isinstance` but supports custom types |
+| is_type_tuple | `NO` | Checks if the given argument is a tuple of types or custom types |
+| is_length | `NO` | Checks if the given argument is a lenght `int | ... | (int | ..., int | ...)` |
+| exp_check | `NO` | Checks the result of an expression, (like `True` is valid) |
 
 ##### Custom Types :
 
 | CType | Has arguments | Usage |
 | :------------:| :------------:| :------------: | 
-| Function | `NO` | Function checking (*NB: lambda functions types is also function*) |
+| Generator | `NO` | Generator checking |
+| Function | `NO` | Function checking (*NB: lambda functions type is also function*) |
+| Method | `NO` | Methods checking |
 | Module | `NO` | Module checking |
 | Class | `YES` | Class checking (`is_init=False`) |
 | Union | `YES` | Value type in `*args` |
 | File | `YES` | File checking (checks if file exists) |
-| Dict | `YES` | Better dict checing |
+| Dict | `YES` | Better dict checking |
 | Int | `YES` | Better int checking |
 | Str | `YES` | Better str checking |
 
