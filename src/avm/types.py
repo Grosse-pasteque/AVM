@@ -282,7 +282,7 @@ class Str(ext.CType):
 			var = var[:len(self.endswith)]
 
 		for l in list(var):
-			if l not in self.only or l in self.exclude:
+			if (self.only and l not in self.only) or (self.exclude and l in self.exclude):
 				self.error(arg)
 
 		ext.length_check(var, self.length, arg)

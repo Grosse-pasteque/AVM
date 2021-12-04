@@ -1,6 +1,3 @@
-import sys
-sys.path.insert(0, '../')
-
 from avm import (
 	type_check,
 	Union, File, Class, Str, Int, Dict

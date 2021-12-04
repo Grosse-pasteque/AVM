@@ -1,6 +1,3 @@
-import sys
-sys.path.insert(0, '..')
-
 from avm import (
 	type_check, add_ctype,
 	CType
@@ -13,6 +10,7 @@ class MyCustomType(CType):
 		[ Custom Type ] :
 	- must be str
 	- must include self.letter
+		= Str(only=letter), (but it's only an example)
 	"""
 	def __init__(self, letter: str):
 		self.letter = letter

@@ -1,4 +1,4 @@
-# Advanced Variable Manager {AVM} [0.9.1]
+# Advanced Variable Manager: avm
 
 ## By Grosse pastèque#6705
 
@@ -24,6 +24,23 @@ For more informations go **[Here](./avm/__init__.py)**
 - Pattern matching
 - Variable checking
 - More types
+
+
+------------
+
+
+### Installation :
+
+This module is now disponible on PyPi since version 0.9.1
+So you can do `python -m pip install python-avm` or `pip install python-avm`
+
+Then you will be able to use it as a module.
+
+```python
+import avm
+
+...
+```
 
 
 -------------

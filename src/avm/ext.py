@@ -18,8 +18,11 @@ def str_of(of):
 	attrs = ', '.join(
 		"{}={!r}".format(attr, getattr(of, attr))
 		for attr in dir(of)
-		if not attr.startswith('_') and \
+		if all([
+			not attr.startswith('_'),
+			getattr(of, attr) and getattr(of, attr) != -1,
 			str(type(getattr(of, attr))) not in ["<class 'function'>", "<class 'method'>"]
+		])
 	)
 
 	try:

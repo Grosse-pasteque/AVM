@@ -1,6 +1,3 @@
-import sys
-sys.path.insert(0, '..')
-
 from avm import (
 	convertor, type_check
 )
