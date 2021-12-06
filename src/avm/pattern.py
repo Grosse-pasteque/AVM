@@ -1,4 +1,4 @@
-from . import errors, ext
+from . import ext
 
 
 
@@ -19,17 +19,9 @@ class Pattern(ext.CType):
 
 	~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	"""
-	def __init__(self, pattern, raiseerror=True, containers=(list, tuple, set, dict)):
+	def __init__(self, pattern, containers=(list, tuple, set, dict)):
 		self.pattern = pattern
-		self._raiseerror = raiseerror
 		self._containers = containers
-
-
-	def _ret(self, value, arg):
-		if self._raiseerror:
-			raise errors.PatternError(
-				f"arg: {arg!r} with value of {value!r} does not match Pattern: {self.pattern!r}")
-		return False
 
 
 	def is_infinite(self, val):
@@ -41,57 +33,56 @@ class Pattern(ext.CType):
 		return False
 
 
-	def check(self, variable, arg: str = None):
-		def _check(variable, pattern, arg, default_var):
+	def check(self, variable):
+		def _check(variable, pattern):
 			if isinstance(pattern, self._containers) and not self.is_infinite(pattern):
 				if not isinstance(variable, type(pattern)):
-					return self._ret(default_var, arg) 
+					return False 
 
 				# prevent length error
 				if len(pattern) != len(variable):
-					return self._ret(default_var, arg) 
+					return False 
 				
 				if isinstance(pattern, dict):
 					for key, key_type in zip(variable, pattern):
 						value, value_type = variable[key], pattern[key_type]
 
-						res = _check(key, key_type, arg, default_var)
+						res = _check(key, key_type)
 						if not res:
-							return self._ret(default_var, arg)
+							return False
 
-						res = _check(value, value_type, arg, default_var)
+						res = _check(value, value_type)
 						if not res:
-							return self._ret(default_var, arg)
+							return False
 				else:
 					for i, var in enumerate(variable):
 						if isinstance(pattern[i], self._containers) and not self.is_infinite(pattern[i]):
 							if len(pattern[i]) != len(var):
-								return self._ret(default_var, arg) 
+								return False 
 
-						res = _check(var, pattern[i], arg, default_var)
+						res = _check(var, pattern[i])
 						if not res:
-							return self._ret(default_var, arg)
+							return False
 
 			elif self.is_infinite(pattern):
-				ext.length_check(variable, pattern[1], arg)
+				ext.length_check(variable, pattern[1])
 
 				if not isinstance(variable, type(pattern)):
-					return self._ret(default_var, arg) 
+					return False 
 
 				for var in variable:
 					if not ext.cisinstance(var, pattern[0]):
-						return self._ret(default_var, arg)
+						return False
 
 			elif isinstance(pattern, tuple(ext.custom_types)):
-				pattern.check(variable, arg)
+				return pattern.check(variable)
 
 			elif pattern == None:
 				return True
 
 			else:
 				if not isinstance(variable, pattern):
-					return self._ret(default_var, arg) 
-
+					return False 
 			return True
 
-		return _check(variable, self.pattern, arg, default_var=variable)
+		return _check(variable, self.pattern)

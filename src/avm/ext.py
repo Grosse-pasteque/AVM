@@ -1,17 +1,17 @@
 import abc
 
 
-def length_check(obj, length, arg):
-	msg = f"arg: {arg} don't have the correct lenght: {str(length).replace('Ellipsis', '-1')} !"
+def length_check(obj, length):
 	if isinstance(length, tuple):
 		if any([
 			length[0] not in [-1, ...] and len(obj) < length[0],
 			length[1] not in [-1, ...] and len(obj) > length[1]
 		]):
-			raise ValueError(msg)
+			return False
 	else:
 		if length not in [-1, ...] and len(obj) > length:
-			raise ValueError(msg)
+			return False
+	return True
 
 
 def str_of(of):
@@ -98,10 +98,7 @@ def cisinstance(variable, types):
 		if not tuple_check(types, variable):
 			return False
 	elif isinstance(types, tuple(custom_types)):
-		try:
-			types.check(variable)
-		except:
-			return False
+		return types.check(variable)
 	elif not isinstance(variable, types):
 		return False
 	return True
@@ -142,18 +139,13 @@ def is_length(var):
 	return True
 
 
-def exp_check(check, var, arg):
+def exp_check(check, var):
 	if check == None:
-		return
+		return True
 
 	exp = check.replace('%s', str(var))
 	try:
 		res = eval(exp)
-
+		return bool(res)
 	except:
-		raise ValueError(
-			f'expression: {exp!r} failled to execute !') from None
-
-	if not res:
-		raise ValueError(
-			f"arg: {arg!r} doesn't respect check expression !")
+		return False

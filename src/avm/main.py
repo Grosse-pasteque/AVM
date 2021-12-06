@@ -40,6 +40,12 @@ def _change_args(func, arguments):
 	return args, kwargs
 
 
+def _to_pattern(var):
+	if isinstance(var, pattern.Pattern):
+		return var
+	return pattern.Pattern(var)
+
+
 def parameters(func, args, kwargs):
 	types.Function().check(func)
 	data = inspect.signature(func).bind(*args, **kwargs)
@@ -52,6 +58,34 @@ def parameters(func, args, kwargs):
 	return (arguments, annotations)
 
 
+def only(*mode: str):
+	MODES = {
+		"function":			inspect.isfunction,
+		"class":			inspect.isclass,
+		"method":			inspect.ismethod,
+		"lambda-function":	lambda x: repr(x).startswith('<functio <lambda>')
+	}
+	if mode == (all, ):
+		mode = tuple(MODES.values())
+
+	if any((m not in MODES) for m in mode):
+		raise AttributeError(
+			f'mode: {mode!r} is not valid ! must be in {list(MODES.keys())}')
+	def inner(func):
+		if not inspect.isfunction(func):
+			raise TypeError(
+				'This decorator is only for functions')
+
+		def wrapper(f):
+			if not any(MODES[m](f) for m in mode):
+				raise TypeError(
+					f'This decorator is only for {mode!r} types !')
+			return func(f)
+		return wrapper
+	return inner
+
+
+@only("function")
 def convertor(func):
 	logs = []
 	def wrapper(*args, **kwargs):
@@ -90,14 +124,8 @@ def convertor(func):
 def type_check(output=False, private=False):
 	# checks output type (if True)
 	# checks private attributes type ("_attr" or "__attr__") (if True)
+	@only("function")
 	def inner(func):
-		if inspect.isclass(func):
-			for name in dir(func):
-				attr = getattr(func, name)
-				if inspect.isfunction(attr):
-					new = type_check(output=output, private=private)(attr)
-					setattr(func, name, new)
-
 		def wrapper(*args, **kwargs):
 			arguments, annotations = parameters(func, args, kwargs)
 
@@ -108,42 +136,26 @@ def type_check(output=False, private=False):
 				if name in annotations:
 					if name.startswith('*'):
 						if isinstance(annotations[name], dict) or name.startswith('**'):
-							value = tuple(value.values())
+							value = list(value.values())
 
 						for arg in value:
-							if isinstance(annotations[name], pattern.Pattern):
-								p = annotations[name]
-							else:
-								p = pattern.Pattern(annotations[name])
-							valid = p.check(arg, name)
+							if not _to_pattern(annotations[name]).check(arg):
+								raise TypeError(
+									f"{func.__name__} arg: {name!r} must be "
+									f"{annotations[name]}, not {type(arg)} !")
 
-					else:
-						if isinstance(annotations[name], pattern.Pattern):
-							p = annotations[name]
-						else:
-							p = pattern.Pattern(annotations[name])
-						valid = p.check(value, name)
-
-					if not valid:
+					elif not _to_pattern(annotations[name]).check(value):
 						raise TypeError(
-							f"{func.__name__} arg: {name!r} must be {p} , not {type(value)} !")
+							f"{func.__name__} arg: {name!r} must be "
+							f"{annotations[name]}, not {type(value)} !")
 
 			returned = func(*args, **kwargs)
 
 			if "return" in annotations and output == True:
-				err = f"func: {func.__name__} returned: {type(returned)}, "\
-					f"instead of: {annotations['return']}"
-
-				if isinstance(annotations[name], pattern.Pattern):
-					p = annotations['return']
-				else:
-					p = pattern.Pattern(annotations['return'])
-				try:
-					valid = p.check(returned, 'return')
-				except:
-					valid = False
-				if not valid:
-					raise ValueError(err)
+				if not _to_pattern(annotations['return']).check(returned, 'return'):
+					raise ValueError(
+						f"func: {func.__name__} returned: {type(returned)}, "
+						f"instead of: {annotations['return']}")
 			return returned
 
 		wrapper.__name__ = func.__name__
@@ -156,10 +168,7 @@ def type_check(output=False, private=False):
 
 
 def make_class(method, private=False):
-	if not inspect.isfunction(method):
-		raise TypeError(
-			'arg: method must be a function !')
-
+	@only(all)
 	def inner(cls):
 		if not inspect.isclass(cls):
 			return cls

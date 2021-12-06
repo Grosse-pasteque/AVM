@@ -1,7 +1,7 @@
 import os
 
 import inspect
-from . import errors, ext
+from . import ext
 
 
 # All of these Custom types examples (class.__doc__)
@@ -32,17 +32,16 @@ class File(ext.CType):
 		self.extension = extension
 
 
-	def check(self, var, arg: str = 'file'):
+	def check(self, var):
 		if not isinstance(var, str):
-			self.error(arg)
+			return False
 		
 		if not os.path.exists(var):
-			raise FileNotFoundError(
-				f"[Errno 2] No such file or directory: {var!r}")
+			return False
 
 		if not var.endswith(self.extension):
-			raise errors.FileExtensionError(
-				f'extension of file {var!r} is icorrect for arg {arg!r}')
+			return False
+		return True
 
 
 
@@ -72,9 +71,8 @@ class Union(ext.CType):
 		self.types = types
 
 
-	def check(self, var, arg: str = 'arg'):
-		if not ext.tuple_check(self.types, var):
-			self.error(arg)
+	def check(self, var):
+		return ext.tuple_check(self.types, var)
 
 
 
@@ -102,7 +100,7 @@ class Class(ext.CType):
 		self,
 		is_init: bool = False,
 		*,
-		subclass: tuple = (object,)
+		subclass: tuple = (object, )
 	):
 		if False in [
 			isinstance(is_init, bool),
@@ -114,14 +112,17 @@ class Class(ext.CType):
 		self.subclass = subclass
 
 
-	def check(self, var, arg: str = 'arg'):
+	def check(self, var):
 		if self.is_init:
 			var = type(var)
+
 		if not inspect.isclass(var):
-			self.error(arg)
+			return False
+
 		# self.subclass need to be either a class or tuple of class
 		if not issubclass(var, self.subclass):
-			self.error(arg)
+			return False
+		return True
 
 
 
@@ -136,8 +137,8 @@ class Module(ext.CType):
 
 	~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	"""
-	def check(self, var, arg: str = 'arg'):
-		if not inspect.ismodule(var): self.error(arg)
+	def check(self, var):
+		return inspect.ismodule(var)
 
 
 
@@ -155,8 +156,8 @@ class Function(ext.CType):
 
 	~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	"""
-	def check(self, var, arg: str = 'arg'):
-		if not inspect.isfunction(var): self.error(arg)
+	def check(self, var):
+		return inspect.isfunction(var)
 
 
 
@@ -175,8 +176,8 @@ class Method(ext.CType):
 
 	~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	"""
-	def check(self, var, arg: str = 'arg'):
-		if inspect.ismethod(var): self.error(arg)
+	def check(self, var):
+		return inspect.ismethod(var)
 
 
 
@@ -209,18 +210,18 @@ class Int(ext.CType):
 		self.exp = exp
 
 
-	def check(self, var, arg: str = 'arg'):
+	def check(self, var):
 		try:
 			int(var) # checks if var is int
 		except:
-			self.error(arg)
+			return False
+
 		if self._min and self._min > var:
-			raise ValueError(
-				f'arg: {arg} must be <= {self._min} !')
+			return False
+
 		if self._max and self._max < var:
-			raise ValueError(
-				f'arg: {arg} must be >= {self._max} !')
-		ext.exp_check(self.exp, var, arg)
+			return False
+		return ext.exp_check(self.exp, var)
 
 
 
@@ -266,15 +267,15 @@ class Str(ext.CType):
 		self._ignore = ignore
 
 
-	def check(self, var, arg: str = 'arg'):
+	def check(self, var):
 		if not isinstance(var, str):
-			self.error(arg)
+			return False
 
 		if any([
 			not var.startswith(self.startswith),
 			not var.endswith(self.endswith)
 		]):
-			self.error(arg)
+			return False
 
 		if self._ignore.setdefault('prefix', False):
 			var = var[len(self.startswith):]
@@ -283,10 +284,11 @@ class Str(ext.CType):
 
 		for l in list(var):
 			if (self.only and l not in self.only) or (self.exclude and l in self.exclude):
-				self.error(arg)
+				return False
 
-		ext.length_check(var, self.length, arg)
-		ext.exp_check(self.exp, var, arg)
+		if not ext.length_check(var, self.length):
+			return False
+		return ext.exp_check(self.exp, var)
 
 
 
@@ -308,8 +310,8 @@ class Dict(ext.CType):
 		length: 	(int, tuple) = -1
 	):
 		if False in [
-			ext.is_type_tuple(key_type),
-			ext.is_type_tuple(value_type),
+			ext.is_type_tuple(key_type) or not key_type,
+			ext.is_type_tuple(value_type) or not value_type,
 			ext.is_length(length)
 		]:
 			raise TypeError(arguments_err(self))
@@ -318,18 +320,20 @@ class Dict(ext.CType):
 		self.length = length
 
 
-	def check(self, var, arg: str = 'arg'):
+	def check(self, var):
 		if not isinstance(var, dict):
-			self.error(arg)
+			return False
 
-		ext.length_check(var, self.length, arg)
+		if not ext.length_check(var, self.length):
+			return False
 
 		for key, value in var.items():
 			if any([
 				self.key_type and not ext.cisinstance(key, self.key_type),
 				self.value_type and not ext.cisinstance(value, self.value_type)
 			]):
-				self.error(arg)
+				return False
+		return True
 
 
 
@@ -344,6 +348,5 @@ class Generator(ext.CType):
 
 	~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	"""
-	def check(self, var, arg: str = 'arg'):
-		if not inspect.isgenerator(var):
-			self.error(arg)
+	def check(self, var):
+		return inspect.isgenerator(var)

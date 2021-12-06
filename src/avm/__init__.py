@@ -1,13 +1,9 @@
 from .main import (
 	type_check,
 	convertor,
+	only,
 	make_class,
 	parameters
-)
-
-from .errors import (
-	PatternError,
-	FileExtensionError
 )
 
 from .pattern import Pattern
@@ -108,6 +104,7 @@ del check
 __all__ = (
 	'type_check',
 	'convertor',
+	'only',
 	'make_class',
 	'parameters',
 
@@ -135,13 +132,10 @@ __all__ = (
 
 	'is_type_tuple',
 	'is_length',
-	'exp_check',
-	
-	'FileExtensionError',
-	'PatternError'
+	'exp_check'
 )
 
-__version__ = '0.9.3'
+__version__ = '0.9.5'
 __author__ = (
 	'Grosse pastèque#6705',
 	'https://github.com/Grosse-pasteque',
