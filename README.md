@@ -86,12 +86,6 @@ import avm
 | Pattern | Check a variable for the given pattern (uses recursions) |
 | CType | Used as parent for new custom types |
 
-##### Errors :
-| Error | Usage |
-| :------------:| :------------:|
-| FileExtensionError | When file doesn't exists |
-| PatternError | When patterns is incorrect |
-
 
 ------------
 
