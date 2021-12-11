@@ -1,0 +1,14 @@
+LICENSE
+README.md
+setup.cfg
+setup.py
+src/avm/__init__.py
+src/avm/ext.py
+src/avm/main.py
+src/avm/pattern.py
+src/avm/types.py
+src/avm/usefull_patterns.py
+src/python_avm.egg-info/PKG-INFO
+src/python_avm.egg-info/SOURCES.txt
+src/python_avm.egg-info/dependency_links.txt
+src/python_avm.egg-info/top_level.txt

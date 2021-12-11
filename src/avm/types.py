@@ -6,7 +6,15 @@ from . import ext
 
 # All of these Custom types examples (class.__doc__)
 # are correct and wont raise any errors if you test them
-arguments_err = lambda self: f'invalid arguments found see arguments types for {self}.'
+def arguments_err(self):
+	anno = self.__init__.__annotations__
+	args = '\n   - '.join(
+		f"{name}:  {an}"
+		for name, an in anno.items()
+	)
+	return "Args of avm.types.{}.__init__ must be:\n   - {}".format(
+		self.__class__.__name__,
+		args.replace("<class '", '').replace("'>", ''))
 
 
 
@@ -38,10 +46,7 @@ class File(ext.CType):
 		
 		if not os.path.exists(var):
 			return False
-
-		if not var.endswith(self.extension):
-			return False
-		return True
+		return var.endswith(self.extension)
 
 
 
@@ -75,6 +80,10 @@ class Union(ext.CType):
 		return ext.tuple_check(self.types, var)
 
 
+	def __or__(self, other):
+		self.types = (*self.types, other)
+
+
 
 class Class(ext.CType):
 	"""
@@ -100,12 +109,12 @@ class Class(ext.CType):
 		self,
 		is_init: bool = False,
 		*,
-		subclass: tuple = (object, )
+		subclass: tuple = None
 	):
 		if False in [
 			isinstance(is_init, bool),
-			isinstance(subclass, tuple) and \
-				False not in [inspect.isclass(c) for c in subclass]
+			not subclass or (isinstance(subclass, tuple) and \
+				False not in [inspect.isclass(c) for c in subclass])
 		]:
 			raise TypeError(arguments_err(self))
 		self.is_init = is_init
@@ -120,7 +129,7 @@ class Class(ext.CType):
 			return False
 
 		# self.subclass need to be either a class or tuple of class
-		if not issubclass(var, self.subclass):
+		if self.subclass and not issubclass(var, self.subclass):
 			return False
 		return True
 
@@ -205,21 +214,66 @@ class Int(ext.CType):
 			exp and isinstance(exp, str) or not exp
 		]:
 			raise TypeError(arguments_err(self))
-		self._min = _min
-		self._max = _max
+		self.min = _min
+		self.max = _max
 		self.exp = exp
 
 
 	def check(self, var):
-		try:
-			int(var) # checks if var is int
-		except:
+		if not isinstance(var, int):
 			return False
 
-		if self._min and self._min > var:
+		if self.min and self.min > var:
 			return False
 
-		if self._max and self._max < var:
+		if self.max and self.max < var:
+			return False
+		return ext.exp_check(self.exp, var)
+
+
+
+class Float(ext.CType):
+	"""
+	avm.Float ~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+		variable = 3.141
+
+		typ = avm.Float(3, 1.0, 4.0)
+		typ.check(variable)
+
+	~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	"""
+	def __init__(
+		self,
+		decimals:	int = None,
+		_min:		float = None,
+		_max:		float = None,
+		exp:		str = None
+	):
+		if False in [
+			decimals and isinstance(decimals, int) or not decimals,
+			_min and isinstance(_min, float) or not _min,
+			_max and isinstance(_max, float) or not _max,
+			exp and isinstance(exp, str) or not exp
+		]:
+			raise TypeError(arguments_err(self))
+		self.decimals = decimals
+		self.min = _min
+		self.max = _max
+		self.exp = exp
+
+
+	def check(self, var):
+		if not isinstance(var, float):
+			return False
+
+		if self.min and self.min > var:
+			return False
+
+		if self.max and self.max < var:
+			return False
+
+		if len(str(var).split('.')[1]) > self.decimals:
 			return False
 		return ext.exp_check(self.exp, var)
 
@@ -227,7 +281,7 @@ class Int(ext.CType):
 
 class Str(ext.CType):
 	"""
-	avm.Str ~~~~~~~~~~~~~~~~~~~~~~~~~~
+	avm.Str ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		variable = "abc"
 
@@ -339,7 +393,7 @@ class Dict(ext.CType):
 
 class Generator(ext.CType):
 	"""
-	avm.Generator ~~~~~~~~~~~~~~~~~~~~~~~~~~
+	avm.Generator ~~~~~~~~~~~~~~~~~~~~~
 
 		variable = (i for i in range(0, 20, 2))
 
@@ -350,3 +404,168 @@ class Generator(ext.CType):
 	"""
 	def check(self, var):
 		return inspect.isgenerator(var)
+
+
+
+class Length(ext.CType):
+	"""
+	avm.Length ~~~~~~~~~~~~~~~~~~~~~~~~
+
+		variable = [1, 2, 3]
+
+		typ = avm.Length(2, 10) # length between 2 and 10
+		typ.check(variable)
+
+	~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	"""
+	def __init__(
+		self,
+		*length:	(int, tuple),
+		containers:	(type, tuple) = (list, tuple, set, dict, str, bytes, bytearray)
+	):
+		if False in [
+			ext.is_length(length),
+			ext.is_type_tuple(containers)
+		]:
+			raise TypeError(arguments_err(self))
+		if len(length) == 1 and isinstance(length, tuple):
+			length = length[0]
+		self.length = length
+		self.containers = containers
+
+
+	def check(self, var):
+		if not isinstance(var, self.containers):
+			return False
+		return ext.length_check(var, self.length)
+
+
+
+class BRange(ext.CType):
+	"""
+	avm.BRange ~~~~~~~~~~~~~~~~~~~~~~~~
+
+		# stands for Better Range
+
+		a, b, c = 3, -1, 0.2
+
+		range_1 = avm.BRange(10)
+		range_1.check(a)
+		a in range_1
+
+		range_2 = avm.BRange(5, float('-inf'))
+		range_2.check(b)
+		b in range_2
+
+		range_3 = avm.BRange(0, 10, 0.2)
+		range_3.check(c)
+		c in range_3
+
+	~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	"""
+	def __init__(self, *args: int):
+		if len(args) == 3:
+			start, end, step = args
+		elif len(args) == 2:
+			start, end, step = *args, 1
+		elif len(args) == 1:
+			start, end, step = 0, *args, 1
+		else:
+			raise ValueError(
+				'Invalid BRange !')
+
+		VALID = (int, float)
+		if not all([
+			isinstance(start, VALID),
+			isinstance(end, VALID),
+			isinstance(step, VALID)
+		]):
+			raise TypeError(
+				f"start, end, step must be float or int !")
+
+		def count_decimal(n):
+			if self.is_infinite(n):
+				return 0
+			dec = str(float(n)).split('.')[1]
+			return (0 if dec == '0' else len(dec))
+
+		self.decimal = max(
+			count_decimal(start),
+			count_decimal(end),
+			count_decimal(step)
+		)
+
+		if any([
+			self.is_infinite(start),
+			self.is_infinite(step)
+		]):
+			raise ValueError(
+				"start and step can't be infinite !")
+
+		self.start = start
+		self.end = end
+		self.step = step
+
+		self.range = None
+		if not self.is_infinite(self.end):
+			self.range = [
+				x
+				for x in self.generate()
+			]
+
+
+	def is_infinite(self, var):
+		return var in [
+			float('inf'),
+			float('-inf')
+		]
+
+
+	def check(self, var: (int, float)):
+		if not isinstance(var, (int, float)):
+			return False
+
+		if self.is_infinite(self.end):
+			# infinite support
+			if any([
+				self.end == float('inf') and (
+					not self.start <= var or \
+					not ((var + self.start) / self.step).is_integer()
+				),
+				self.end == float('-inf') and (
+					not self.start >= var or \
+					not ((var + self.start) / self.step).is_integer()
+				)
+			]):
+				return False
+		return var in self.range
+
+
+	def generate(self, last=False):
+		if self.is_infinite(self.end):
+			while True:
+				yield self.start
+				self.start += self.step
+		while True:
+			yield self.start
+			self.start += self.step
+			self.start = round(self.start, self.decimal)
+			if any([
+				last and self.start > self.end,
+				not last and self.start >= self.end
+			]):
+				break
+
+
+	def __iter__(self):
+		if self.range:
+			return iter(self.range)
+		return iter([self.end])
+
+	
+	def __contains__(self, other):
+		if self.is_infinite(self.end):
+			return self.check(other)
+		if self.range:
+			return other in self.range
+		return False

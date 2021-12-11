@@ -48,19 +48,36 @@ def add_ctype(ctype):
 	if CType not in ctype.__bases__:
 		raise TypeError(
 			f'Custom type {ctype} must inherit from {CType!r} !')
+	if ctype.__name__ in [t.__name__ for t in custom_types]:
+		raise NameError(
+			f'CType with name: {ctype.__name__} already exists !')
 	custom_types.append(ctype)
 
 
 
 class CType(metaclass=abc.ABCMeta):
 	@abc.abstractmethod
-	def check(self):
+	def check(self, var):
 		raise NotImplementedError
 
 
 	def error(self, arg):
 		raise TypeError(
 			f'arg: {arg!r} must be {self} !')
+
+	
+	def __or__(self, other):
+		# finds the union type
+		for ctype in custom_types:
+			if ctype.__name__ == 'Union':
+				return ctype(self, other)
+		raise Warning(
+			"avm.Union is really important so please dont remove "
+			"it or some functionnalities might not work :/")
+
+
+	def __eq__(self, other):
+		return self.check(other)
 
 
 	def __str__(self):
@@ -119,6 +136,9 @@ def is_type_tuple(var):
 def is_length(var):
 	if True not in [isinstance(var, (int, tuple)), var == ...]:
 		return False
+
+	if isinstance(var, tuple) and len(var) == 1:
+		var = var[0]
 
 	if isinstance(var, int) and -1 > var:
 		return False

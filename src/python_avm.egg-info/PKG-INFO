@@ -1,3 +1,26 @@
+Metadata-Version: 2.1
+Name: python-avm
+Version: 0.9.5
+Summary: This module allows you to check variables types, create new custom types and many others usefull features.
+Home-page: https://github.com/Grosse-pasteque/AVM/
+Author: Grosse-pasteque
+Author-email: grossepasteque.gamer34@gmail.com
+License: MIT
+Project-URL: Source, https://github.com/Grosse-pasteque/AVM/
+Keywords: type-checking,function-args-checking,custom-types,better-types,function-args-convertion
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: Topic :: Software Development :: Build Tools
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3 :: Only
+Requires-Python: >=3.7, <4
+Description-Content-Type: text/markdown
+License-File: LICENSE
+
 # Advanced Variable Manager: avm
 
 ## By Grosse pastèque#6705
@@ -73,11 +96,8 @@ import avm
 | Function | `NO` | Function checking (*NB: lambda functions type is also function*) |
 | Method | `NO` | Methods checking |
 | Module | `NO` | Module checking |
-| BRange | `YES` | Better `range` and checking |
-| Length | `YES` | Container length checking |
 | Class | `YES` | Class checking (`is_init=False`) |
 | Union | `YES` | Value type in `*args` |
-| Float | `YES` | Better float checking |
 | File | `YES` | File checking (checks if file exists) |
 | Dict | `YES` | Better dict checking |
 | Int | `YES` | Better int checking |
@@ -89,6 +109,12 @@ import avm
 | Pattern | Check a variable for the given pattern (uses recursions) |
 | CType | Used as parent for new custom types |
 
+##### Errors :
+| Error | Usage |
+| :------------:| :------------:|
+| FileExtensionError | When file doesn't exists |
+| PatternError | When patterns is incorrect |
+
 
 ------------
 
@@ -97,3 +123,4 @@ import avm
 
 I have created three examples to help you understand a bit more if you want.
 In [Here](./examples/).
+

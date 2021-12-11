@@ -13,8 +13,11 @@ from .types import (
 	Function,
 	Method,
 	Module,
+	BRange,
+	Length,
 	Class,
 	Union,
+	Float,
 	File,
 	Dict,
 	Int,
@@ -40,8 +43,11 @@ custom_types += [
 	Pattern,
 	Method,
 	Module,
+	BRange,
+	Length,
 	Class,
 	Union,
+	Float,
 	File,
 	Dict,
 	Int,
@@ -112,8 +118,11 @@ __all__ = (
 	'Function',
 	'Method'
 	'Module',
+	'BRange',
+	'Length',
 	'Class',
 	'Union',
+	'Float',
 	'File',
 	'Dict',
 	'Int',
@@ -135,7 +144,7 @@ __all__ = (
 	'exp_check'
 )
 
-__version__ = '0.9.5'
+__version__ = '0.9.7'
 __author__ = (
 	'Grosse pastèque#6705',
 	'https://github.com/Grosse-pasteque',

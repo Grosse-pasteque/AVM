@@ -15,15 +15,11 @@ class MyCustomType(CType):
 	def __init__(self, letter: str):
 		self.letter = letter
 
-
 	def check(self, var, arg: str = 'arg'):
-		if not isinstance(var, str):
-			raise TypeError(
-				f'arg: {arg!r} with value {var!r} must be {str} !')
-
-		if self.letter not in var:
-			raise ValueError(
-				f'{self.letter!r} must be in {arg} !')
+		return all([
+			isinstance(var, str),
+			self.letter in var
+		])
 
 
 

@@ -5,37 +5,55 @@ import typing
 from . import types, pattern
 
 
+def _astrip(text, i=1):
+	# auto strip
+	return str(text)[i:-i]
+
+
+def _nospace(text):
+	return str(text).replace(' ', '')
+
+
 def _reformat_args(args, base):
 	real_args = [
 		p.split(':')[0]
-		for p in str(base)[1:-1].replace(' ', '').split(',')
+		for p in _nospace(_astrip(base)).split(',')
 	]
 
-	for i, _ in enumerate(zip(real_args, list(args.keys()))):
-		part, key = _
-		name = part.split(':')[0].split('=')[0].replace(' ', '')
-		
+	for part, key in zip(real_args, dict(args)):
+		name = _nospace(part\
+			.split(':')[0]\
+			.split('=')[0])
+
 		if key == name.replace('*', ''):
 			values = args[key]
 			args.pop(key)
 			args[name] = values
-
 	return args
 
 
 def _change_args(func, arguments):
 	kwargs = {}
+	try:
+		__file__
+	except NameError:
+		# -> avm imported in console
+		raise NotImplementedError(
+			"avm.convertor can't be used in "
+			"terminal/console for the moment") from None
 
-	line = traceback.extract_stack()[0].line
-	# func(...)
-	line = line.split(func.__name__)[1]
-	# (...)
-	line = line.split(';')[0][1:-1].replace(' ', '')
-	# ...
-	for name, value in list(arguments.items()):
+	# "func(...)" -> "(...)" -> "..."
+	line = _nospace(_astrip(
+		traceback.extract_stack()[0].line\
+			.split(func.__name__)[1]\
+			.split(';')[0]
+	))
+
+	for name, value in arguments.items():
 		if name + '=' in line:
 			kwargs[name] = value
 			arguments.pop(name)
+
 	args = tuple(arguments.values())
 	return args, kwargs
 
@@ -63,14 +81,15 @@ def only(*mode: str):
 		"function":			inspect.isfunction,
 		"class":			inspect.isclass,
 		"method":			inspect.ismethod,
-		"lambda-function":	lambda x: repr(x).startswith('<functio <lambda>')
+		"lambda-function":	lambda x: repr(x).startswith('<function <lambda>')
 	}
 	if mode == (all, ):
 		mode = tuple(MODES.values())
 
 	if any((m not in MODES) for m in mode):
 		raise AttributeError(
-			f'mode: {mode!r} is not valid ! must be in {list(MODES.keys())}')
+			f'mode: {mode!r} is not valid ! must be in {list(MODES)}')
+
 	def inner(func):
 		if not inspect.isfunction(func):
 			raise TypeError(
@@ -80,6 +99,7 @@ def only(*mode: str):
 			if not any(MODES[m](f) for m in mode):
 				raise TypeError(
 					f'This decorator is only for {mode!r} types !')
+
 			return func(f)
 		return wrapper
 	return inner

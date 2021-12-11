@@ -55,6 +55,13 @@ class Pattern(ext.CType):
 						if not res:
 							return False
 				else:
+					if isinstance(pattern, set):
+						pattern = list(pattern)[::-1]
+						# -> {int, ...}
+						# -> {..., int}
+						# -> [..., int]
+						# -> [int, ...]
+
 					for i, var in enumerate(variable):
 						if isinstance(pattern[i], self._containers) and not self.is_infinite(pattern[i]):
 							if len(pattern[i]) != len(var):
@@ -80,9 +87,8 @@ class Pattern(ext.CType):
 			elif pattern == None:
 				return True
 
-			else:
-				if not isinstance(variable, pattern):
-					return False 
+			elif not isinstance(variable, pattern):
+				return False 
 			return True
 
 		return _check(variable, self.pattern)
