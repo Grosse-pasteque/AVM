@@ -144,7 +144,7 @@ __all__ = (
 	'exp_check'
 )
 
-__version__ = '0.9.7'
+__version__ = '0.9.8'
 __author__ = (
 	'Grosse pastèque#6705',
 	'https://github.com/Grosse-pasteque',

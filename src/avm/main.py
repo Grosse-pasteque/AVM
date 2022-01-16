@@ -84,7 +84,7 @@ def only(*mode: str):
 		"lambda-function":	lambda x: repr(x).startswith('<function <lambda>')
 	}
 	if mode == (all, ):
-		mode = tuple(MODES.values())
+		mode = tuple(MODES)
 
 	if any((m not in MODES) for m in mode):
 		raise AttributeError(
